@@ -1,0 +1,50 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 1: Install Packer and create the AMI
+    - name: Set up Packer
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install packer
+
+    - name: Create AMI with Packer
+      run: |
+        packer build packer.json
+
+    # Step 2: Install Terraform and configure infrastructure
+    - name: Set up Terraform
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install terraform
+
+    - name: Run Terraform to set up infrastructure
+      run: |
+        terraform init
+        terraform apply -auto-approve
+
+    # Step 3: Install Ansible and update website content
+    - name: Set up Ansible
+      run: |
+        sudo apt update
+        sudo apt install ansible
+
+    - name: Deploy website content with Ansible
+      run: |
+        ansible-playbook deploy.yml
