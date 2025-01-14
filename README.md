@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ![](https://visitor-badge.laobi.icu/badge?page_id=MarkAntonyGit/Jenkins-Continuous-Deployment)
 
 # Jenkins-Continuous-Deployment
@@ -75,3 +76,6 @@ Once any commits are done on the Git repository the Jenkins will be triggered an
 ### Connect with me
 
 --------<img src="https://img.shields.io/badge/-Mark%20Antony-brightgreen"/> ----------------------------------------------------------------------------------------------------------------------------------- <a href="https://www.linkedin.com/in/profile-markantony/"><img src="https://img.shields.io/badge/-Linkedin%20Profile-blue"/></a> ------------------------------------------------------------------------------------------------------------------------------------ <a href="mailto:markantony.alenchery@gmail.com"><img src="https://img.shields.io/badge/-markantony.alenchery@gmail.com-D14836?style=flat&logo=Gmail&logoColor=white"/></a>-------------------------------------------------------
+=======
+# My-CICD-Pipeline
+>>>>>>> origin/main
