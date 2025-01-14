@@ -1,9 +1,7 @@
 region      = ""
-access_key  = ""
-secret_key  = ""
-project     = "Desired Project name"
+project     = "CICD Pipeline"
 acm         = "arn of acm certifiacte"
-ec2-type    = "ec2 type"
+ec2-type    = "t2.micro"
 asg_count   = 3
 domain_name = "domain name"
 vpc_id      = "vpc id"
