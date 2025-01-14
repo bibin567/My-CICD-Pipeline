@@ -9,4 +9,4 @@ variable "domain_name" {}
 variable "vpc_id" {}
 variable "subnet1" {}
 variable "subnet2" {}
-variable "key_name" {} 
+variable "key_name" {}
