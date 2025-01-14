@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for Terraform and Ansible
 
 on:
   push:
@@ -9,42 +9,69 @@ on:
       - main
 
 jobs:
-  build:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Step 1: Install Packer and create the AMI
-    - name: Set up Packer
-      run: |
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install packer
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '1.3.0'  # Adjust based on your version
 
-    - name: Create AMI with Packer
-      run: |
-        packer build packer.json
+      - name: Initialize Terraform
+        run: terraform init
 
-    # Step 2: Install Terraform and configure infrastructure
-    - name: Set up Terraform
-      run: |
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install terraform
+      - name: Format Terraform code
+        run: terraform fmt -check
 
-    - name: Run Terraform to set up infrastructure
-      run: |
-        terraform init
-        terraform apply -auto-approve
+      - name: Validate Terraform code
+        run: terraform validate
 
-    # Step 3: Install Ansible and update website content
-    - name: Set up Ansible
-      run: |
-        sudo apt update
-        sudo apt install ansible
+      - name: Plan Terraform changes
+        run: terraform plan -out=tfplan
 
-    - name: Deploy website content with Ansible
-      run: |
-        ansible-playbook deploy.yml
+      - name: Apply Terraform changes
+        run: terraform apply -auto-approve tfplan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+  ansible:
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Run Ansible Playbook for Autoscaling
+        run: |
+          ansible-playbook -i inventory/hosts playbook_ansible_autoscaling.yml
+
+  website:
+    runs-on: ubuntu-latest
+    needs: ansible
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Website Deployment Script
+        run: bash Git-Script.sh
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: website
+
+    steps:
+      - name: Notify success
+        run: echo "Deployment Successful"
