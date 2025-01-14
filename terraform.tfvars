@@ -1,4 +1,4 @@
-region      = ""
+region      = "us-east-1"
 project     = "CICD Pipeline"
 acm         = "arn:aws:acm:us-east-1:590183907926:certificate/e302dfa9-ec90-4384-ab12-ee59e295dffa"
 ec2-type    = "t2.micro"
