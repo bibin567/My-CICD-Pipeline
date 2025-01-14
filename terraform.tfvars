@@ -1,6 +1,6 @@
 region      = ""
 project     = "CICD Pipeline"
-acm         = "arn of acm certifiacte"
+acm         = "arn:aws:acm:us-east-1:590183907926:certificate/e302dfa9-ec90-4384-ab12-ee59e295dffa"
 ec2-type    = "t2.micro"
 asg_count   = 3
 domain_name = "domain name"
