@@ -1,10 +1,10 @@
 region      = "us-east-1"
 project     = "CICD Pipeline"
-acm         = "arn:aws:acm:us-east-1:590183907926:certificate/e302dfa9-ec90-4384-ab12-ee59e295dffa"
+acm         = "arn:aws:acm:us-east-1:211125312293:certificate/6c93a35d-2235-4d69-8042-a56aaddda0d7"
 ec2-type    = "t2.micro"
-asg_count   = 3
-domain_name = "domain name"
-vpc_id      = "vpc id"
-subnet1     = "public subnet1 id"
-subnet2     = "public subnet2 id"
-key_name    = "name of key added in this folder"
+asg_count   = 2
+domain_name = "bibin.co.uk"
+vpc_id      = "vpc-0f0241bb9dfcff67c"
+subnet1     = "subnet-089bb1eaa25e93798"
+subnet2     = "subnet-09a8d161cd536d6b4"
+key_name    = "aws"
