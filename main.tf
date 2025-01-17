@@ -1,3 +1,10 @@
+#========================================================
+# Get SSH Public Key from SSM Parameter
+#========================================================
+
+data "aws_ssm_parameter" "public_key" {
+  name = "/ec2/ssh/public-key"
+}
 
 #========================================================
 # Get Latest Packer AMI
@@ -12,7 +19,6 @@ data "aws_ami" "packer_ami" {
     values = ["packer-Git-Website*"]
   }
 }
-
 
 #========================================================
 # Creating TargetGroup For Application LoadBalancer
@@ -42,6 +48,7 @@ resource "aws_lb_target_group" "TG" {
   lifecycle {
     create_before_destroy = true
   }
+
   tags = {
     Name = "${var.project}-TG"
   }
@@ -52,7 +59,6 @@ resource "aws_lb_target_group" "TG" {
 #========================================================
 
 resource "aws_lb" "ALB" {
-
   name                       = "Terraform-ALB"
   internal                   = false
   load_balancer_type         = "application"
@@ -60,6 +66,7 @@ resource "aws_lb" "ALB" {
   security_groups            = [aws_security_group.SG.id]
   enable_deletion_protection = false
   depends_on                 = [aws_lb_target_group.TG]
+  
   tags = {
     Name = "${var.project}-ALB"
   }
@@ -70,20 +77,19 @@ resource "aws_lb" "ALB" {
 #========================================================
 
 resource "aws_lb_listener" "http" {
-
   load_balancer_arn = aws_lb.ALB.id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
     type = "redirect"
-
     redirect {
       port        = "443"
       protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
+
   depends_on = [aws_lb.ALB]
 }
 
@@ -92,7 +98,6 @@ resource "aws_lb_listener" "http" {
 #========================================================
 
 resource "aws_lb_listener" "https" {
-
   load_balancer_arn = aws_lb.ALB.id
   port              = "443"
   protocol          = "HTTPS"
@@ -114,7 +119,6 @@ resource "aws_lb_listener" "https" {
 #========================================================
 
 resource "aws_lb_listener_rule" "rule" {
-
   listener_arn = aws_lb_listener.https.id
   priority     = 100
 
@@ -135,7 +139,6 @@ resource "aws_lb_listener_rule" "rule" {
 #========================================================
 
 resource "aws_security_group" "SG" {
-
   name        = "Terraform-SG"
   description = "allows all traffic both inbound and outbound"
 
@@ -161,15 +164,51 @@ resource "aws_security_group" "SG" {
 }
 
 #========================================================
+# Create IAM Role for EC2 Instance
+#========================================================
+
+resource "aws_iam_role" "ec2_role" {
+  name               = "EC2_SSM_Role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
+}
+
+#========================================================
+# Create IAM Instance Profile
+#========================================================
+
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "EC2_SSM_Profile"
+  role = aws_iam_role.ec2_role.name
+}
+
+#========================================================
 # Launch Configuration 
 #========================================================
 
 resource "aws_launch_configuration" "LC" {
-
   image_id        = data.aws_ami.packer_ami.id
   instance_type   = var.ec2-type
   key_name        = var.key_name
   security_groups = [aws_security_group.SG.id]
+  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name # Attach IAM Role
+
+  # Modify user_data to add the public key to authorized_keys
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "${data.aws_ssm_parameter.public_key.value}" >> /home/ec2-user/.ssh/authorized_keys
+              chmod 600 /home/ec2-user/.ssh/authorized_keys
+              chown ec2-user:ec2-user /home/ec2-user/.ssh/authorized_keys
+              EOF
+
   lifecycle {
     create_before_destroy = true
   }
@@ -180,7 +219,6 @@ resource "aws_launch_configuration" "LC" {
 #========================================================
 
 resource "aws_autoscaling_group" "ASG" {
-
   launch_configuration = aws_launch_configuration.LC.id
   vpc_zone_identifier  = ["${var.subnet1}", "${var.subnet2}"]
   health_check_type    = "EC2"
@@ -198,4 +236,3 @@ resource "aws_autoscaling_group" "ASG" {
     create_before_destroy = true
   }
 }
-

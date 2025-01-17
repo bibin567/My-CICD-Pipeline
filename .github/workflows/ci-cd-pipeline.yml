@@ -68,7 +68,7 @@ jobs:
         id: fmt
         run: terraform fmt -check
         env:
-          TF_ACTION_WORKING_DIR: ./
+          TF_ACTION_WORKING_DIR: ./ 
         continue-on-error: true
 
       - name: Terraform Validate
@@ -88,6 +88,23 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
+
+      - name: Store SSH Key in SSM
+        run: |
+          aws ssm put-parameter \
+            --name "/ec2/ssh/public-key" \
+            --type "String" \
+            --value "$(cat ~/.ssh/id_rsa.pub)" \
+            --overwrite
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Output EC2 Public IPs
+        run: |
+          instance_ids=$(terraform output -json instances | jq -r '.[].id')
+          aws ec2 describe-instances --instance-ids $instance_ids --query 'Reservations[*].Instances[*].PublicIpAddress' --output text
 
   ansible:
     runs-on: ubuntu-latest

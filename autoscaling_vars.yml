@@ -1,7 +1,7 @@
 ---
-region: "us-east-1"                                             #Eg: ap-south-1
+region: "us-east-1"                                             # Example: ap-south-1
 #access_key: "your access key"
-#secret_key: "your secret key"      
-key_name: "aws"                                                  #Copy this key pem file to this directory
+#secret_key: "your secret key"
+key_name: "aws"                                                # Ensure this is the same as in Terraform/Packer
 health_time: 25                                
 git_url: "https://github.com/bibin567/project.git"
