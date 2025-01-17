@@ -14,15 +14,24 @@ variable "key_name" {
   default = "aws"
 }
 
+variable "ssh_private_key_file" {
+  description = "Path to the SSH private key file"
+  type        = string
+}
+
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "Git-Website" {
-  ami_name         = "packer-Git-Website ${local.timestamp}"
-  instance_type    = var.type
-  region           = "us-east-1"
-  source_ami       = var.ami
-  ssh_username     = "ec2-user"
-  ssh_keypair_name = var.key_name  # Correct attribute name
+  ami_name               = "packer-Git-Website ${local.timestamp}"
+  instance_type          = var.type
+  region                 = "us-east-1"
+  source_ami             = var.ami
+  ssh_username           = "ec2-user"
+  ssh_private_key_file   = var.ssh_private_key_file  # Updated to use variable
+  ssh_keypair_name       = var.key_name
+  tags = {
+    Name = "MyPackerImage"
+  }
 }
 
 build {
