@@ -3,9 +3,6 @@ on: push
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }} 
 
 jobs:
   packer:
@@ -21,19 +18,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set up SSH private key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
-      - name: Initialize Packer Template
+      - name: Initialize Packer Template (Optional)
         uses: hashicorp/packer-github-actions@master
         with:
           command: init
 
-      - name: Validate Template
+      - name: Validate Template (Optional)
         uses: hashicorp/packer-github-actions@master
         with:
           command: validate
@@ -48,7 +38,7 @@ jobs:
           target: GitWebsite.pkr.hcl
         env:
           PACKER_LOG: 1
-          ssh_private_key_file: ~/.ssh/id_rsa 
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Access secret directly
 
 
 
