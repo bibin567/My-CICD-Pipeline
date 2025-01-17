@@ -8,12 +8,6 @@ variable "type" {
   default = "t2.micro"
 }
 
-variable "key_name" {
-  description = "The name of the SSH key pair"
-  type        = string
-  default = "aws"
-}
-
 variable "ssh_private_key_file" {
   description = "Path to the SSH private key file"
   type        = string
