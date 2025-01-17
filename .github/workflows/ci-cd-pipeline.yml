@@ -120,6 +120,11 @@ jobs:
           sudo apt update
           sudo apt install -y ansible
 
+      - name: Set up SSH private key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa  # Ensures only the owner can read/write the file
+
       - name: Run Ansible playbook
         run: |
-          ansible-playbook -i ${{ secrets.ANSIBLE_INVENTORY }} --private-key ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }} playbook_ansible_autoscaling.yml
+          ansible-playbook -i ${{ secrets.ANSIBLE_INVENTORY }} --private-key ~/.ssh/id_rsa playbook_ansible_autoscaling.yml
