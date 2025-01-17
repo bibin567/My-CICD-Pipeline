@@ -17,15 +17,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set Key Pair Environment Variable    
-        run: echo "KEY_NAME=${{ secrets.AWS_KEY_NAME }}" >> $GITHUB_ENV  # Make sure to add AWS_KEY_NAME secret
-
-      - name: Set up SSH private key for Packer
+      - name: Set up SSH private key
         run: |
+          mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: Initialize Packer Template
         uses: hashicorp/packer-github-actions@master
@@ -47,7 +46,7 @@ jobs:
           target: GitWebsite.pkr.hcl
         env:
           PACKER_LOG: 1
-          ssh_private_key_file: "~/.ssh/id_rsa"  # Pass the private key path as an environment variablee
+          ssh_private_key_file: "~/.ssh/id_rsa"
 
   terraform:
     runs-on: ubuntu-latest
@@ -67,48 +66,25 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        id: init
         run: terraform init
 
       - name: Terraform Format
-        id: fmt
         run: terraform fmt -check
-        env:
-          TF_ACTION_WORKING_DIR: ./ 
         continue-on-error: true
 
       - name: Terraform Validate
-        id: validate
         run: terraform validate -no-color
 
       - name: Terraform Plan
-        id: plan
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
         run: terraform plan -no-color
         continue-on-error: true
 
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
-
-      - name: Store SSH Key in SSM
-        run: |
-          aws ssm put-parameter \
-            --name "/ec2/ssh/public-key" \
-            --type "String" \
-            --value "$(cat ~/.ssh/id_rsa.pub)" \
-            --overwrite
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+        if: github.ref == 'refs/heads/main'
 
       - name: Output EC2 Public IPs
         run: |
@@ -118,7 +94,6 @@ jobs:
   ansible:
     runs-on: ubuntu-latest
     needs:
-      - packer
       - terraform
     steps:
       - name: Set up Ansible
@@ -128,8 +103,10 @@ jobs:
 
       - name: Set up SSH private key for Ansible
         run: |
+          mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa  # Ensures only the owner can read/write the file
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: Run Ansible playbook
         run: |
