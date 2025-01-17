@@ -1,3 +1,4 @@
+
 variable "ami" {
   type    = string
   default = "ami-05576a079321f21f8"
@@ -8,26 +9,19 @@ variable "type" {
   default = "t2.micro"
 }
 
-
-
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "Git-Website" {
-  ami_name               = "packer-Git-Website ${local.timestamp}"
-  instance_type          = var.type
-  region                 = "us-east-1"
-  source_ami             = var.ami
-  ssh_username           = "ec2-user"
-  ssh_private_key_file   = var.ssh_private_key_file  # Updated to use variable
-  ssh_keypair_name       = var.key_name
-  tags = {
-    Name = "MyPackerImage"
-  }
+  ami_name      = "packer-Git-Website ${local.timestamp}"
+  instance_type = "${var.type}"
+  region        = "us-east-1"
+  source_ami    = "${var.ami}"
+  ssh_username  = "ec2-user"
 }
 
 build {
   sources = ["source.amazon-ebs.Git-Website"]
-  
+
   provisioner "shell" {
     script = "./Git-Script.sh"
   }
