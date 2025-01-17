@@ -21,7 +21,7 @@ source "amazon-ebs" "Git-Website" {
   region                 = "us-east-1"
   source_ami             = var.ami
   ssh_username           = "ec2-user"
-  ssh_private_key_file   = var.ssh_private_key  # Updated to use variablee
+  ssh_private_key_file   = var.ssh_private_key  # Updated to use variable
   ssh_keypair_name       = var.key_name
   tags = {
     Name = "MyPackerImage"
