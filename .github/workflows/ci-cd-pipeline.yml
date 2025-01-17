@@ -3,10 +3,12 @@ on: push
 
 env:
   AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }} 
 
 jobs:
   packer:
-    name: 'Packer GitHub Actions'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -46,7 +48,9 @@ jobs:
           target: GitWebsite.pkr.hcl
         env:
           PACKER_LOG: 1
-          ssh_private_key_file: "/github/home/.ssh/id_rsa"
+          ssh_private_key_file: ~/.ssh/id_rsa 
+
+
 
   terraform:
     runs-on: ubuntu-latest
