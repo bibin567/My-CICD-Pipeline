@@ -8,6 +8,12 @@ variable "type" {
   default = "t2.micro"
 }
 
+variable "key_name" {
+  description = "The name of the SSH key pair"
+  type        = string
+  default = "aws"
+}
+
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "Git-Website" {
@@ -16,7 +22,7 @@ source "amazon-ebs" "Git-Website" {
   region           = "us-east-1"
   source_ami       = var.ami
   ssh_username     = "ec2-user"
-  ssh_keypair_name = var.key_name  # Add this line
+  ssh_keypair_name = var.key_name  # Correct attribute name
 }
 
 build {
