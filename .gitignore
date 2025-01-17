@@ -4,7 +4,7 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
-*.ppk
+*.pem
 
 # Crash log files
 crash.log
