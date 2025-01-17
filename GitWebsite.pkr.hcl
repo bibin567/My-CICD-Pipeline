@@ -1,25 +1,22 @@
-
-    
 variable "ami" {
   type    = string
-  default = "ami-09115b7bffbe3c5e4"    
+  default = "ami-05576a079321f21f8"
 }
 
 variable "type" {
   type    = string
-  default = "t2.micro" 
+  default = "t2.micro"
 }
 
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "Git-Website" {
-
-  ami_name      = "packer-Git-Website ${local.timestamp}"
-  instance_type = "${var.type}"
-  region        = "us-east-1"
-
-  source_ami    = "${var.ami}"
-  ssh_username  = "ec2-user"
+  ami_name         = "packer-Git-Website ${local.timestamp}"
+  instance_type    = var.type
+  region           = "us-east-1"
+  source_ami       = var.ami
+  ssh_username     = "ec2-user"
+  ssh_keypair_name = var.key_name  # Add this line
 }
 
 build {

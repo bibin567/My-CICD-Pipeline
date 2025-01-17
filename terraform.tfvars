@@ -1,6 +1,6 @@
 region      = "us-east-1"
 project     = "CICD Pipeline"
-acm         = "arn:aws:acm:us-east-1:211125312293:certificate/6c93a35d-2235-4d69-8042-a56aaddda0d7"
+acm         = "arn:aws:acm:us-east-1:211125432164:certificate/7e95cfc5-4ba0-409c-a7b1-f179ba0bb84d"
 ec2-type    = "t2.micro"
 asg_count   = 2
 domain_name = "bibin.co.uk"
