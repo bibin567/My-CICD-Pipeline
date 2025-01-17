@@ -46,7 +46,7 @@ jobs:
           target: GitWebsite.pkr.hcl
         env:
           PACKER_LOG: 1
-          ssh_private_key_file: "~/.ssh/id_rsa"
+          ssh_private_key_file: "/github/home/.ssh/id_rsa"
 
   terraform:
     runs-on: ubuntu-latest
