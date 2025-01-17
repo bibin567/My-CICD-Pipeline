@@ -8,10 +8,7 @@ variable "type" {
   default = "t2.micro"
 }
 
-variable "ssh_private_key_file" {
-  description = "Path to the SSH private key file"
-  type        = string
-}
+
 
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
