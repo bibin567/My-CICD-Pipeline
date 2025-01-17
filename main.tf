@@ -73,7 +73,7 @@ resource "aws_lb" "ALB" {
 }
 
 #========================================================
-# Creating http listener of application oadbalancer
+# Creating http listener of application loadbalancer
 #========================================================
 
 resource "aws_lb_listener" "http" {
