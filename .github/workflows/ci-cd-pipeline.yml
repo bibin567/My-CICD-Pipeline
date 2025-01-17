@@ -34,11 +34,11 @@ jobs:
         uses: hashicorp/packer-github-actions@master
         with:
           command: build
-          arguments: "-color=false -on-error=abort"
+          arguments: "-var 'ssh_private_key_file=/github/home/.ssh/id_rsa' -color=false -on-error=abort"
           target: GitWebsite.pkr.hcl
         env:
-          PACKER_LOG: 1
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Access secret directly
+            PACKER_LOG: 1
+  
 
 
 
