@@ -14,7 +14,7 @@ locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 source "amazon-ebs" "Git-Website" {
   ami_name      = "packer-Git-Website ${local.timestamp}"
   instance_type = "${var.type}"
-  region        = "us-east-1"
+  region        = "ap-south-1"
   source_ami    = "${var.ami}"
   ssh_username  = "ec2-user"
 }

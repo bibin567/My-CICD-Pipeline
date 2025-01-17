@@ -6,6 +6,7 @@ env:
 
 jobs:
   packer:
+    name: 'Packer GitHub Actions'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -16,14 +17,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ap-south-1
 
-      - name: Initialize Packer Template (Optional)
+      - name: Initialize Packer Template
         uses: hashicorp/packer-github-actions@master
         with:
           command: init
 
-      - name: Validate Template (Optional)
+      - name: Validate Template
         uses: hashicorp/packer-github-actions@master
         with:
           command: validate
@@ -34,17 +35,22 @@ jobs:
         uses: hashicorp/packer-github-actions@master
         with:
           command: build
-          arguments: "-var 'ssh_private_key_file=${{ secrets.SSH_PRIVATE_KEY_PATH }}'"
+          arguments: "-color=false -on-error=abort"
           target: GitWebsite.pkr.hcl
         env:
-            PACKER_LOG: 1
-          
+          PACKER_LOG: 1
+
   terraform:
     runs-on: ubuntu-latest
     needs:
       - packer
+
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v2
 
       - name: Setup Terraform
@@ -57,51 +63,45 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Terraform Init
+        id: init
         run: terraform init
 
       - name: Terraform Format
+        id: fmt
         run: terraform fmt -check
+        env:
+          TF_ACTION_WORKING_DIR: ./
         continue-on-error: true
 
       - name: Terraform Validate
+        id: validate
         run: terraform validate -no-color
 
       - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
         run: terraform plan -no-color
         continue-on-error: true
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        if: github.ref == 'refs/heads/main'
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
 
-      - name: Output EC2 Public IPs
-        run: |
-          instance_ids=$(terraform output -json instances | jq -r '.[].id')
-          aws ec2 describe-instances --instance-ids $instance_ids --query 'Reservations[*].Instances[*].PublicIpAddress' --output text
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
 
   ansible:
     runs-on: ubuntu-latest
     needs:
+      - packer
       - terraform
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Set up Ansible
-        run: |
-          sudo apt update
-          sudo apt install -y ansible
-
-      - name: Set up SSH private key for Ansible
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
       - name: Run Ansible playbook
-        run: |
-          ansible-playbook -i ${{ secrets.ANSIBLE_INVENTORY }} --private-key ~/.ssh/id_ed25519 playbook_ansible_autoscaling.yml
+        uses: actions/checkout@v2
+        with:
+          playbook: playbook_ansible_autoscaling.yml # path to your Ansible playbook
+          inventory: hosts # the ansible inventory to use, stored as "ansible_inventory" in the GitHub secrets
