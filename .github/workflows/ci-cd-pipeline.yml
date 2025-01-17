@@ -19,6 +19,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Set Key Pair Environment Variable    
+        run: echo "KEY_NAME=${{ secrets.AWS_KEY_NAME }}" >> $GITHUB_ENV  # Make sure to add AWS_KEY_NAME secret
+        
       - name: Initialize Packer Template
         uses: hashicorp/packer-github-actions@master
         with:
